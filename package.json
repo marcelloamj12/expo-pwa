@@ -4,7 +4,7 @@
   "private": true,
   "main": "expo-router/entry",
   "engines": {
-    "node": ">=22.13.0"
+    "node": "22.x"
   },
   "scripts": {
     "start": "expo start --web",
@@ -23,7 +23,8 @@
     "react-native": "0.88.0",
     "react-native-web": "*",
     "react-native-screens": "*",
-    "react-native-safe-area-context": "*"
+    "react-native-safe-area-context": "*",
+    "@expo/metro-runtime": "*"
   },
   "devDependencies": {
     "@types/react": "*",
