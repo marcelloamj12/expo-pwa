@@ -1,5 +1,4 @@
 import { StyleSheet, Text, View } from "react-native";
-import { cores, raio } from "../theme";
 
 export type TipoMensagem = "sucesso" | "erro" | "info";
 
@@ -8,37 +7,24 @@ type Props = { tipo: TipoMensagem; texto: string };
 export function Mensagem({ tipo, texto }: Props) {
   return (
     <View style={[styles.caixa, estilos[tipo]]} accessibilityRole="alert">
-      <View style={[styles.barra, barras[tipo]]} />
       <Text style={[styles.texto, textos[tipo]]}>{texto}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  caixa: {
-    flexDirection: "row",
-    borderRadius: raio.medio,
-    overflow: "hidden",
-    alignItems: "stretch",
-  },
-  barra: { width: 5 },
-  texto: { flex: 1, fontSize: 15, lineHeight: 21, paddingVertical: 12, paddingHorizontal: 14 },
+  caixa: { padding: 12, borderRadius: 8, borderWidth: 1 },
+  texto: { fontSize: 15 },
 });
 
 const estilos = StyleSheet.create({
-  sucesso: { backgroundColor: cores.sucessoClaro },
-  erro: { backgroundColor: cores.perigoClaro },
-  info: { backgroundColor: cores.primariaClara },
-});
-
-const barras = StyleSheet.create({
-  sucesso: { backgroundColor: cores.sucesso },
-  erro: { backgroundColor: cores.perigo },
-  info: { backgroundColor: cores.primaria },
+  sucesso: { backgroundColor: "#ecfdf5", borderColor: "#34d399" },
+  erro: { backgroundColor: "#fef2f2", borderColor: "#f87171" },
+  info: { backgroundColor: "#eff6ff", borderColor: "#93c5fd" },
 });
 
 const textos = StyleSheet.create({
-  sucesso: { color: "#0E4F31" },
-  erro: { color: "#8A1F28" },
-  info: { color: cores.primariaEscura },
+  sucesso: { color: "#065f46" },
+  erro: { color: "#991b1b" },
+  info: { color: "#1e40af" },
 });

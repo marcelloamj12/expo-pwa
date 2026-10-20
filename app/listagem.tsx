@@ -1,13 +1,9 @@
-import { Stack, useFocusEffect, useRouter } from "expo-router";
+import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
-import { Avatar } from "../src/components/Avatar";
-import { Botao } from "../src/components/Botao";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { Mensagem } from "../src/components/Mensagem";
-import { Pagina } from "../src/components/Pagina";
 import { firebaseConfigurado } from "../src/services/firebase";
 import { excluirUsuario, listarUsuarios } from "../src/services/usuarios";
-import { cores, raio } from "../src/theme";
 import type { Usuario } from "../src/types";
 import { mensagemDeErro } from "../src/utils/validacao";
 
@@ -24,7 +20,7 @@ export default function Listagem() {
 
   const carregar = useCallback(async () => {
     if (!firebaseConfigurado) {
-      setErro("Firebase não configurado. Cadastre as variáveis EXPO_PUBLIC_FIREBASE_* na Vercel e faça um novo deploy.");
+      setErro("Firebase não configurado. Cadastre as variáveis EXPO_PUBLIC_FIREBASE_* e faça um novo deploy.");
       setCarregando(false);
       return;
     }
@@ -66,130 +62,134 @@ export default function Listagem() {
     }
   }
 
-  const primeiraCarga = carregando && usuarios.length === 0 && !erro;
-  const vazio = !carregando && !erro && usuarios.length === 0;
-
   return (
-    <Pagina>
-      <Stack.Screen options={{ title: "Usuários cadastrados" }} />
+    <ScrollView contentContainerStyle={styles.pagina}>
+      <View style={styles.conteudo}>
+        <Text style={styles.titulo}>Usuários cadastrados</Text>
 
-      <View style={styles.cabecalho}>
-        <View style={styles.cabecalhoTexto}>
-          <Text style={styles.titulo}>Usuários cadastrados</Text>
-          {usuarios.length > 0 && (
-            <Text style={styles.subtitulo}>
-              {usuarios.length} {usuarios.length === 1 ? "usuário" : "usuários"}
-            </Text>
-          )}
+        <View style={styles.barra}>
+          <Pressable
+            style={[styles.botaoAtualizar, carregando && styles.desativado]}
+            onPress={carregar}
+            disabled={carregando}
+            accessibilityRole="button"
+          >
+            <Text style={styles.textoAtualizar}>Atualizar</Text>
+          </Pressable>
+          <Link href="/" style={styles.link}>
+            Voltar ao cadastro
+          </Link>
         </View>
-        <Botao titulo="Atualizar" variante="suave" pequeno onPress={carregar} carregando={carregando} />
-      </View>
 
-      {erro && <Mensagem tipo="erro" texto={`Não foi possível carregar a lista: ${erro}`} />}
-      {erroExclusao && <Mensagem tipo="erro" texto={`Não foi possível excluir: ${erroExclusao}`} />}
+        {erro && <Mensagem tipo="erro" texto={`Não foi possível carregar: ${erro}`} />}
+        {erroExclusao && <Mensagem tipo="erro" texto={`Não foi possível excluir: ${erroExclusao}`} />}
 
-      {primeiraCarga && (
-        <View style={styles.centro}>
-          <ActivityIndicator size="large" color={cores.primaria} />
-          <Text style={styles.centroTexto}>Carregando usuários...</Text>
-        </View>
-      )}
+        {carregando && <ActivityIndicator size="large" color="#2563eb" style={styles.carregando} />}
 
-      {vazio && (
-        <View style={[styles.cartao, styles.vazio]}>
-          <Text style={styles.vazioTitulo}>Nenhum usuário cadastrado</Text>
-          <Text style={styles.vazioTexto}>Cadastre o primeiro e ele aparece aqui.</Text>
-          <Botao titulo="Cadastrar usuário" onPress={() => router.navigate("/")} />
-        </View>
-      )}
+        {!carregando && !erro && usuarios.length === 0 && (
+          <Text style={styles.vazio}>Nenhum usuário cadastrado ainda.</Text>
+        )}
 
-      {usuarios.length > 0 && (
-        <View style={styles.cartao}>
-          {usuarios.map((u, i) => {
-            const confirmando = confirmandoId === u.id;
-            const excluindo = excluindoId === u.id;
-            return (
-              <View
-                key={u.id}
-                style={[styles.linha, i > 0 && styles.linhaDivisor, confirmando && styles.linhaPerigo]}
-              >
-                <View style={styles.pessoa}>
-                  <Avatar nome={u.nome} />
-                  <View style={styles.dados}>
-                    <Text style={styles.nome} numberOfLines={1}>
-                      {confirmando ? `Excluir ${u.nome}?` : u.nome}
-                    </Text>
-                    <Text style={styles.email} numberOfLines={1}>
-                      {confirmando ? "Esta ação não pode ser desfeita." : u.email}
-                    </Text>
-                  </View>
-                </View>
+        {usuarios.map((u) => (
+          <View key={u.id} style={styles.cartao}>
+            <Text style={styles.nome}>{u.nome}</Text>
+            <Text style={styles.email}>{u.email}</Text>
 
-                <View style={styles.acoes}>
-                  {confirmando ? (
-                    <>
-                      <Botao
-                        titulo="Excluir"
-                        variante="perigo"
-                        pequeno
-                        carregando={excluindo}
-                        onPress={() => confirmarExclusao(u.id)}
-                      />
-                      <Botao
-                        titulo="Cancelar"
-                        variante="contorno"
-                        pequeno
-                        desativado={excluindo}
-                        onPress={() => setConfirmandoId(null)}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Botao titulo="Editar" variante="suave" pequeno onPress={() => editar(u)} />
-                      <Botao
-                        titulo="Excluir"
-                        variante="textoPerigo"
-                        pequeno
-                        onPress={() => {
-                          setErroExclusao(null);
-                          setConfirmandoId(u.id);
-                        }}
-                      />
-                    </>
-                  )}
+            {confirmandoId === u.id ? (
+              <View style={styles.confirmacao}>
+                <Text style={styles.pergunta}>Excluir este usuário?</Text>
+                <View style={styles.linhaBotoes}>
+                  <Pressable
+                    style={[styles.btn, styles.btnPerigo, excluindoId === u.id && styles.desativado]}
+                    onPress={() => confirmarExclusao(u.id)}
+                    disabled={excluindoId === u.id}
+                    accessibilityRole="button"
+                  >
+                    {excluindoId === u.id ? (
+                      <ActivityIndicator color="#ffffff" />
+                    ) : (
+                      <Text style={styles.txtBtnClaro}>Sim, excluir</Text>
+                    )}
+                  </Pressable>
+                  <Pressable
+                    style={[styles.btn, styles.btnNeutro]}
+                    onPress={() => setConfirmandoId(null)}
+                    disabled={excluindoId === u.id}
+                    accessibilityRole="button"
+                  >
+                    <Text style={styles.txtBtnEscuro}>Cancelar</Text>
+                  </Pressable>
                 </View>
               </View>
-            );
-          })}
-        </View>
-      )}
-    </Pagina>
+            ) : (
+              <View style={styles.linhaBotoes}>
+                <Pressable
+                  style={[styles.btn, styles.btnNeutro]}
+                  onPress={() => editar(u)}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.txtBtnEscuro}>Editar</Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.btn, styles.btnContorno]}
+                  onPress={() => {
+                    setErroExclusao(null);
+                    setConfirmandoId(u.id);
+                  }}
+                  accessibilityRole="button"
+                >
+                  <Text style={styles.txtBtnPerigo}>Excluir</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  cabecalho: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, paddingTop: 4 },
-  cabecalhoTexto: { flex: 1, gap: 2 },
-  titulo: { fontSize: 26, fontWeight: "800", color: cores.texto, letterSpacing: -0.5 },
-  subtitulo: { fontSize: 15, color: cores.textoSuave },
-  centro: { alignItems: "center", gap: 12, paddingVertical: 48 },
-  centroTexto: { fontSize: 15, color: cores.textoSuave },
-  cartao: {
-    backgroundColor: cores.superficie,
-    borderRadius: raio.grande,
-    borderWidth: 1,
-    borderColor: cores.borda,
-    overflow: "hidden",
+  pagina: { flexGrow: 1, backgroundColor: "#ffffff", alignItems: "center" },
+  conteudo: { width: "100%", maxWidth: 560, padding: 24, gap: 12 },
+  titulo: { fontSize: 24, fontWeight: "700", color: "#111827" },
+  barra: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  botaoAtualizar: {
+    backgroundColor: "#2563eb",
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
-  vazio: { alignItems: "center", padding: 28, gap: 8 },
-  vazioTitulo: { fontSize: 18, fontWeight: "700", color: cores.texto },
-  vazioTexto: { fontSize: 15, color: cores.textoSuave, marginBottom: 8, textAlign: "center" },
-  linha: { padding: 16, gap: 12 },
-  linhaDivisor: { borderTopWidth: 1, borderTopColor: cores.borda },
-  linhaPerigo: { backgroundColor: cores.perigoClaro },
-  pessoa: { flexDirection: "row", alignItems: "center", gap: 12 },
-  dados: { flex: 1, gap: 2 },
-  nome: { fontSize: 17, fontWeight: "700", color: cores.texto },
-  email: { fontSize: 14, color: cores.textoSuave },
-  acoes: { flexDirection: "row", gap: 8, justifyContent: "flex-end" },
+  textoAtualizar: { color: "#ffffff", fontSize: 15, fontWeight: "600" },
+  link: { fontSize: 16, color: "#2563eb", fontWeight: "600" },
+  carregando: { marginVertical: 24 },
+  vazio: { fontSize: 16, color: "#6b7280", textAlign: "center", marginVertical: 24 },
+  cartao: {
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+    borderRadius: 10,
+    padding: 14,
+    gap: 4,
+    backgroundColor: "#ffffff",
+  },
+  nome: { fontSize: 17, fontWeight: "600", color: "#111827" },
+  email: { fontSize: 15, color: "#4b5563", marginBottom: 8 },
+  linhaBotoes: { flexDirection: "row", gap: 10 },
+  confirmacao: { gap: 8 },
+  pergunta: { fontSize: 15, fontWeight: "600", color: "#991b1b" },
+  btn: {
+    flex: 1,
+    minHeight: 42,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 10,
+  },
+  btnNeutro: { backgroundColor: "#f3f4f6", borderWidth: 1, borderColor: "#d1d5db" },
+  btnContorno: { borderWidth: 1, borderColor: "#f87171", backgroundColor: "#ffffff" },
+  btnPerigo: { backgroundColor: "#dc2626" },
+  txtBtnEscuro: { color: "#374151", fontSize: 15, fontWeight: "600" },
+  txtBtnClaro: { color: "#ffffff", fontSize: 15, fontWeight: "600" },
+  txtBtnPerigo: { color: "#b91c1c", fontSize: 15, fontWeight: "600" },
+  desativado: { opacity: 0.6 },
 });
