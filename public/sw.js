@@ -1,7 +1,7 @@
 // Service worker do PWA.
 // Regra de ouro: só guarda em cache os ARQUIVOS DO APP (telas, ícones).
 // Nunca mexe nos dados do Firebase, que ficam em outro domínio.
-const CACHE = "expo-pwa-v1";
+const CACHE = "expo-pwa-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(["/", "/listagem"])));
