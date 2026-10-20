@@ -1,13 +1,17 @@
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Link, Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-import { Botao } from "../src/components/Botao";
-import { Campo } from "../src/components/Campo";
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { Mensagem, type TipoMensagem } from "../src/components/Mensagem";
-import { Pagina } from "../src/components/Pagina";
 import { firebaseConfigurado } from "../src/services/firebase";
 import { atualizarUsuario, criarUsuario, verificarConexao } from "../src/services/usuarios";
-import { cores, raio } from "../src/theme";
 import { mensagemDeErro, validarUsuario, type ErrosFormulario } from "../src/utils/validacao";
 
 type Aviso = { tipo: TipoMensagem; texto: string };
@@ -85,7 +89,7 @@ export default function Cadastro() {
       } else {
         await criarUsuario(v.nome, v.email);
         limpar();
-        setAviso({ tipo: "sucesso", texto: "Usuário cadastrado com sucesso." });
+        setAviso({ tipo: "sucesso", texto: "Usuário cadastrado com sucesso!" });
       }
     } catch (e) {
       // Em caso de falha, os campos continuam preenchidos para o usuário tentar de novo.
@@ -97,97 +101,114 @@ export default function Cadastro() {
   }
 
   return (
-    <Pagina>
-      <Stack.Screen options={{ title: editandoId ? "Editar usuário" : "Cadastro de usuários" }} />
-
-      <View style={styles.cabecalho}>
+    <ScrollView contentContainerStyle={styles.pagina} keyboardShouldPersistTaps="handled">
+      <Stack.Screen options={{ title: editandoId ? "Editar" : "Cadastro" }} />
+      <View style={styles.conteudo}>
         <Text style={styles.titulo}>{editandoId ? "Editar usuário" : "Cadastro de usuários"}</Text>
-        <Text style={styles.subtitulo}>
-          {editandoId
-            ? "Altere os dados e toque em Salvar alterações."
-            : "Preencha o nome e o e-mail e toque em Cadastrar."}
-        </Text>
-      </View>
 
-      {conexao === "naoConfigurado" && (
-        <Mensagem
-          tipo="erro"
-          texto="Firebase não configurado. Cadastre as variáveis EXPO_PUBLIC_FIREBASE_* na Vercel e faça um novo deploy."
-        />
-      )}
-      {conexao === "erro" && <Mensagem tipo="erro" texto={`Não foi possível conectar: ${conexaoErro}`} />}
+        {conexao === "naoConfigurado" && (
+          <Mensagem
+            tipo="erro"
+            texto="Firebase não configurado. Cadastre as variáveis EXPO_PUBLIC_FIREBASE_* e faça um novo deploy."
+          />
+        )}
+        {conexao === "erro" && <Mensagem tipo="erro" texto={`Falha ao conectar: ${conexaoErro}`} />}
+        {conexao === "ok" && <Text style={styles.conexaoOk}>● Conectado ao Firestore</Text>}
 
-      <View style={styles.cartao}>
-        <Campo
-          rotulo="Nome"
+        <Text style={styles.rotulo}>Nome</Text>
+        <TextInput
+          style={[styles.input, erros.nome ? styles.inputErro : null]}
           value={nome}
           onChangeText={setNome}
-          placeholder="Ex.: Maria da Silva"
+          placeholder="Digite o nome"
           editable={!carregando}
           autoCapitalize="words"
-          erro={erros.nome}
         />
-        <Campo
-          rotulo="E-mail"
+        {erros.nome ? <Text style={styles.erroCampo}>{erros.nome}</Text> : null}
+
+        <Text style={styles.rotulo}>E-mail</Text>
+        <TextInput
+          style={[styles.input, erros.email ? styles.inputErro : null]}
           value={email}
           onChangeText={setEmail}
-          placeholder="Ex.: maria@site.com"
+          placeholder="nome@site.com"
           editable={!carregando}
           keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          erro={erros.email}
         />
+        {erros.email ? <Text style={styles.erroCampo}>{erros.email}</Text> : null}
 
         {aviso && <Mensagem tipo={aviso.tipo} texto={aviso.texto} />}
 
-        <Botao
-          titulo={editandoId ? "Salvar alterações" : "Cadastrar"}
-          onPress={enviar}
-          carregando={carregando}
-          larguraTotal
-        />
+        <View style={styles.botoes}>
+          <Pressable
+            style={[styles.botao, styles.botaoPrincipal, carregando && styles.botaoDesativado]}
+            onPress={enviar}
+            disabled={carregando}
+            accessibilityRole="button"
+          >
+            {carregando ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : (
+              <Text style={styles.textoBotaoPrincipal}>{editandoId ? "Salvar" : "Cadastrar"}</Text>
+            )}
+          </Pressable>
 
-        <View style={styles.secundarios}>
-          <Botao titulo="Limpar" variante="texto" onPress={limpar} desativado={carregando} pequeno />
-          {editandoId && (
-            <Botao
-              titulo="Cancelar edição"
-              variante="textoPerigo"
-              onPress={cancelarEdicao}
-              desativado={carregando}
-              pequeno
-            />
-          )}
+          <Pressable
+            style={[styles.botao, styles.botaoSecundario, carregando && styles.botaoDesativado]}
+            onPress={limpar}
+            disabled={carregando}
+            accessibilityRole="button"
+          >
+            <Text style={styles.textoBotaoSecundario}>Limpar</Text>
+          </Pressable>
         </View>
+
+        {editandoId && (
+          <Pressable onPress={cancelarEdicao} disabled={carregando} accessibilityRole="button">
+            <Text style={styles.link}>Cancelar edição</Text>
+          </Pressable>
+        )}
+
+        <Link href="/listagem" style={styles.link}>
+          Ver usuários cadastrados
+        </Link>
       </View>
-
-      <Botao titulo="Ver usuários cadastrados" variante="contorno" onPress={() => router.navigate("/listagem")} larguraTotal />
-
-      {conexao === "ok" && (
-        <View style={styles.status}>
-          <View style={styles.ponto} />
-          <Text style={styles.statusTexto}>Conectado ao Firestore</Text>
-        </View>
-      )}
-    </Pagina>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  cabecalho: { gap: 4, paddingTop: 4 },
-  titulo: { fontSize: 26, fontWeight: "800", color: cores.texto, letterSpacing: -0.5 },
-  subtitulo: { fontSize: 15, lineHeight: 22, color: cores.textoSuave },
-  cartao: {
-    backgroundColor: cores.superficie,
-    borderRadius: raio.grande,
+  pagina: { flexGrow: 1, backgroundColor: "#ffffff", alignItems: "center" },
+  conteudo: { width: "100%", maxWidth: 560, padding: 24, gap: 10 },
+  titulo: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 4 },
+  conexaoOk: { fontSize: 13, color: "#059669" },
+  rotulo: { fontSize: 15, fontWeight: "600", color: "#374151", marginTop: 6 },
+  input: {
     borderWidth: 1,
-    borderColor: cores.borda,
-    padding: 20,
-    gap: 16,
+    borderColor: "#d1d5db",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    backgroundColor: "#ffffff",
   },
-  secundarios: { flexDirection: "row", justifyContent: "space-between", marginTop: -4 },
-  status: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8 },
-  ponto: { width: 8, height: 8, borderRadius: 4, backgroundColor: cores.sucesso },
-  statusTexto: { fontSize: 13, color: cores.textoSuave },
+  inputErro: { borderColor: "#ef4444" },
+  erroCampo: { fontSize: 13, color: "#b91c1c" },
+  botoes: { flexDirection: "row", gap: 10, marginTop: 8 },
+  botao: {
+    flex: 1,
+    minHeight: 46,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  botaoPrincipal: { backgroundColor: "#2563eb" },
+  botaoSecundario: { backgroundColor: "#f3f4f6", borderWidth: 1, borderColor: "#d1d5db" },
+  botaoDesativado: { opacity: 0.6 },
+  textoBotaoPrincipal: { color: "#ffffff", fontSize: 16, fontWeight: "600" },
+  textoBotaoSecundario: { color: "#374151", fontSize: 16, fontWeight: "600" },
+  link: { fontSize: 16, color: "#2563eb", fontWeight: "600", marginTop: 8 },
 });
