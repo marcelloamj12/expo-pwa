@@ -3,6 +3,52 @@ App em React + Expo e PWA para exemplo em sala de aula. Conexão com Firebase.
 
 CRUD de usuários (nome e e-mail) no Cloud Firestore, com duas telas: **Cadastro** (também usada para editar) e **Listagem**.
 
+## Sobre o app
+
+### O que é
+Um app didático para mostrar, na prática, como uma aplicação web instalável (PWA) conversa com um banco de dados na nuvem (Firebase Firestore). Ele faz as quatro operações básicas, chamadas de CRUD: **criar**, **ler**, **editar** e **excluir** usuários. Funciona no navegador do computador e do celular e pode ser instalado na tela inicial.
+
+### Tecnologias
+- React + Expo (com Expo Router) e TypeScript.
+- Firebase JavaScript SDK e Cloud Firestore.
+- PWA: manifesto, ícones e service worker.
+- Hospedagem na Vercel.
+
+### Tela 1 — Cadastro
+- Título "Cadastro de usuários".
+- Campos **Nome** e **E-mail**, ambos obrigatórios. O e-mail precisa ter um formato válido (por exemplo, `nome@site.com`).
+- Botão **Cadastrar**: grava o usuário no Firestore. Mostra um indicador de carregamento enquanto envia e uma mensagem de sucesso ou de erro. Durante o envio, o botão fica travado para não gravar duas vezes.
+- Botão **Limpar**: apaga o que foi digitado.
+- Depois de cadastrar, os campos são limpos e há um link para ver a lista.
+- Um aviso mostra se o app conseguiu conectar ao Firestore.
+- **Modo edição:** ao tocar em "Editar" na lista, esta mesma tela abre com os dados do usuário. O botão passa a ser **Salvar** e aparece **Cancelar edição**. Ao salvar, o app volta para a lista.
+
+### Tela 2 — Listagem
+- Título "Usuários cadastrados".
+- Mostra o **nome** e o **e-mail** de cada usuário gravado no Firestore, do mais novo para o mais antigo.
+- Mostra um indicador de carregamento, uma mensagem quando não há nenhum usuário e uma mensagem de erro se a consulta falhar.
+- Botão **Atualizar**: busca a lista de novo. A lista também é buscada sozinha ao abrir a tela e ao voltar do cadastro.
+- Botão **Editar**: leva o usuário para a tela de cadastro, em modo edição.
+- Botão **Excluir**: pede confirmação ("Excluir este usuário?") antes de apagar. Se der erro, o usuário continua na lista e aparece uma mensagem.
+- Link **Voltar ao cadastro**.
+
+### Dados
+Os dados ficam na coleção `usuarios` do Firestore. Cada documento tem:
+
+| Campo | Tipo | Para que serve |
+|---|---|---|
+| `nome` | texto | Nome do usuário |
+| `email` | texto | E-mail do usuário |
+| `createdAt` | data e hora | Quando foi criado (o servidor do Firebase preenche) |
+| `updatedAt` | data e hora | Última alteração (o servidor do Firebase preenche) |
+
+O identificador de cada documento é gerado pelo próprio Firestore. O nome e o e-mail nunca são usados como identificador.
+
+### Como o PWA funciona
+- **Instalável:** o app tem manifesto, ícones e abre em modo `standalone`, sem a barra do navegador.
+- **Cache só do que é do app:** o service worker guarda as telas e os ícones. Os dados do Firebase nunca ficam em cache, então a lista não fica velha.
+- **Atualizações:** as páginas buscam primeiro na internet. Quando você publica uma versão nova, ela aparece sozinha.
+
 ## Como colocar para funcionar (só no navegador, sem rodar nada na sua máquina)
 
 ### 1. Firebase Console (https://console.firebase.google.com)
