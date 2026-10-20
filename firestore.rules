@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // REGRAS TEMPORÁRIAS SÓ PARA O TESTE DO CRUD.
+    // Qualquer pessoa com o link do app pode ler, criar, editar e apagar usuários
+    // até a data abaixo. Depois dela, o Firestore bloqueia tudo sozinho.
+    // ANTES DE USAR DE VERDADE: troque por regras com Firebase Authentication.
+    match /usuarios/{id} {
+      allow read, write: if request.time < timestamp.date(2026, 11, 2);
+    }
+
+    // Todo o resto fica bloqueado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -17,6 +17,7 @@
     "expo-linking": "*",
     "expo-constants": "*",
     "expo-status-bar": "*",
+    "firebase": "*",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
