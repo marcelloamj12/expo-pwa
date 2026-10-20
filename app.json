@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Cadastro de Usuários",
+    "slug": "expo-pwa",
+    "version": "1.0.0",
+    "scheme": "expopwa",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./public/favicon.png"
+    }
+  }
+}
